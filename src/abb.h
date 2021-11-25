@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include "hash.h"
 
 typedef enum {INORDEN, PREORDEN, POSTORDEN} abb_recorrido;
 
@@ -90,6 +91,12 @@ size_t abb_tamanio(abb_t* arbol);
  * Devuelve la cantidad de veces que fue invocada la función.
 */
 size_t abb_con_cada_elemento(abb_t* arbol, abb_recorrido recorrido, bool (*funcion)(void*, char*, void*), void* aux);
+
+
+
+size_t abb_con_cada_elemento_h(hash_t* hash, abb_t* arbol, bool (*funcion)(hash_t*, const char*, void*), void* aux, bool* seguir);
+
+
 
 /**
  * Recorre el arbol según el recorrido especificado y va almacenando los

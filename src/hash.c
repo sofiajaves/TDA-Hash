@@ -250,6 +250,15 @@ void hash_destruir(hash_t* hash){
 
 size_t hash_con_cada_clave(hash_t* hash, bool (*funcion)(hash_t* hash, const char* clave, void* aux), void* aux){
     
+    if(!hash || !funcion)
+        return 0;
 
-    return 0;
+    bool seguir = false;
+
+    size_t contador = 0;
+
+    for(int i = 0; i < hash->tamanio_tabla && !seguir; i++)
+        contador += abb_con_cada_elemento_h(hash, hash->tabla[i], funcion, aux, &seguir);
+
+    return contador;
 }

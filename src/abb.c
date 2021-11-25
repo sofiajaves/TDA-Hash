@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #define EXITO 0
 #define ERROR -1
 
@@ -329,6 +330,38 @@ size_t abb_con_cada_elemento(abb_t *arbol, abb_recorrido recorrido, bool (*funci
   }
   return contador;
 }
+
+
+size_t recorrido_preorden_h(hash_t* hash, nodo_abb_t* nodo, bool (*funcion)(hash_t*, const char*, void*), void* aux, bool* seguir){
+
+  if(!nodo || (*seguir))
+    return 0;
+
+  *seguir = funcion(hash, (const char*)nodo->clave, aux);
+
+  size_t recorrido = recorrido_preorden_h(hash, nodo->izquierda, funcion, aux, seguir);
+  recorrido += recorrido_preorden_h(hash, nodo->derecha, funcion, aux, seguir);
+
+  return recorrido+1;
+}
+
+
+size_t abb_con_cada_elemento_h(hash_t* hash, abb_t* arbol, bool (*funcion)(hash_t*, const char*, void*), void* aux, bool* seguir){
+
+  if(!hash || !arbol || !funcion)
+    return 0;
+
+  if(!seguir){
+    bool seguir_flag = false;
+    seguir = &seguir_flag;
+  }
+
+  return recorrido_preorden_h(hash,arbol->nodo_raiz, funcion, aux, seguir);
+}
+
+
+
+
 
 /*
  * Pre: Recibe un elemento y una lista auxiliar
