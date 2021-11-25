@@ -248,9 +248,19 @@ int main(){
     dadaUnaTablaDeHashConVariosElementos_seEliminaUnElementoNuloExitosamente();
     printf("\n");
     dadaUnaTablaDeHash_seIntentaEliminarUnElementoNoInsertado();
+    printf("\n");
+
+    pa2m_nuevo_grupo("Pruebas de Hash con cada Elemento");
+
+    printf("\n");
 
 
-    //SOLO SI TENEMOS TIEMPO Y NO SOMOS VAGOS -> prueba de destructor no nulo
+    printf("\n");
+    pa2m_nuevo_grupo("Pruebas de Destruccion");
+
+
+
+    //SOLO SI TENEMOS TIEMPO Y NO SOMOS VAGOS -> prueba de destructor no nulo. Prueba de destruccion con cada elemento.
     
     return pa2m_mostrar_reporte();
 }

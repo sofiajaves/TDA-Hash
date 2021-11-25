@@ -1,6 +1,7 @@
 #include "hash.h"
-#include "abb.h"
+#include "lista.h"
 #include <string.h>
+#include <stdlib.h>
 
 #define EXITO 0
 #define ERROR -1
@@ -14,7 +15,8 @@ typedef size_t (*funcion_de_hash)(hash_t*, const char*);
 
 struct hash{
 
-    abb_t** tabla;
+    //abb_t** tabla;
+    lista_t** tabla;
     size_t tamanio_tabla;
     funcion_de_hash hash;
     hash_destruir_dato_t destructor;
@@ -48,7 +50,7 @@ hash_t* hash_crear(hash_destruir_dato_t destruir_elemento, size_t capacidad_inic
 
     hash->tamanio_tabla = (capacidad_inicial >= CAPACIDAD_MINIMA ? capacidad_inicial : CAPACIDAD_MINIMA);
 
-    hash->tabla = calloc(hash->tamanio_tabla,sizeof(abb_t*));
+    hash->tabla = calloc(hash->tamanio_tabla,sizeof(lista_t*));
     if(!hash->tabla){
         free(hash);
         return NULL;
@@ -61,15 +63,15 @@ hash_t* hash_crear(hash_destruir_dato_t destruir_elemento, size_t capacidad_inic
 }
 
 //ver si es necesario. Necesario es PERO capaz no conviene hacer una funcion aparte
-abb_t* arbol_en_tabla(hash_t* hash, size_t posicion){
+lista_t* lista_en_tabla(hash_t* hash, size_t posicion){
 
     if(!hash->tabla[posicion])
-        hash->tabla[posicion] = abb_crear();
+        hash->tabla[posicion] = lista_crear();
 
     return hash->tabla[posicion];
 }
 
-int crear_listas(void*** puntero_array, char*** puntero_claves, size_t tamanio){
+int crear_conjunto(void*** puntero_array, char*** puntero_claves, size_t tamanio){
 
     *puntero_array = calloc(tamanio,sizeof(void*));
     if(!*puntero_array)
@@ -84,12 +86,12 @@ int crear_listas(void*** puntero_array, char*** puntero_claves, size_t tamanio){
     return EXITO;
 }
 
-int guardar_elementos_en_listas(hash_t* hash, void** array, char** claves, size_t tamanio){
+int guardar_elementos_en_conjunto(hash_t* hash, void** array, char** claves, size_t tamanio){
 
     size_t elementos_guardados = 0;
 
     for(int i = 0; i < hash->tamanio_tabla; i++)
-        elementos_guardados += abb_recorrer(hash->tabla[i], PREORDEN, array, claves, elementos_guardados, tamanio);
+        elementos_guardados += lista_recorrer(hash->tabla[i], array, claves, elementos_guardados, tamanio);
 
     if(elementos_guardados != tamanio){
         free(array);
@@ -100,16 +102,18 @@ int guardar_elementos_en_listas(hash_t* hash, void** array, char** claves, size_
     return EXITO;
 }
 
+
+//CAMBIAR ESTO Y MIRAR
 int reemplazar_tabla(hash_t* hash){
 
     for(int i = 0; i < hash->tamanio_tabla; i++)
-        abb_destruir(hash->tabla[i]);
+        lista_destruir(hash->tabla[i]);
 
     free(hash->tabla);
 
     hash->tamanio_tabla *= MULTIPLICADOR_REHASH; 
 
-    hash->tabla = calloc(hash->tamanio_tabla,sizeof(abb_t*));
+    hash->tabla = calloc(hash->tamanio_tabla,sizeof(lista_t*));
 
     return (!hash->tabla ? ERROR : EXITO);
 }
@@ -125,10 +129,10 @@ int rehashear(hash_t* hash){
 
     char** claves;
 
-    if(crear_listas(&array, &claves,tamanio) == ERROR)
+    if(crear_conjunto(&array, &claves,tamanio) == ERROR)
         return ERROR;
 
-    if(guardar_elementos_en_listas(hash, array, claves, tamanio) == ERROR)
+    if(guardar_elementos_en_conjunto(hash, array, claves, tamanio) == ERROR)
         return ERROR;
    
     if(reemplazar_tabla(hash) == ERROR)
@@ -165,10 +169,10 @@ int hash_insertar(hash_t* hash, const char* clave, void* elemento){
 
     size_t posicion = hash->hash(hash, clave);
 
-    abb_t* arbol_a_insertar = arbol_en_tabla(hash, posicion);
+    lista_t* lista_a_insertar = lista_en_tabla(hash, posicion);
 
-    abb_t* arbol_auxiliar = abb_insertar(arbol_a_insertar, elemento, (char*)clave);
-    if(!arbol_auxiliar)
+    lista_t* lista_auxiliar = lista_insertar(lista_a_insertar, elemento, (char*)clave);
+    if(!lista_auxiliar)
         return ERROR;
 
     return EXITO;
@@ -184,7 +188,7 @@ int hash_quitar(hash_t* hash, const char* clave){
 
     size_t valor_hash = hash->hash(hash, clave);
 
-    int resultado = abb_quitar(hash->tabla[valor_hash],(char*)clave);
+    int resultado = lista_quitar_por_clave(hash->tabla[valor_hash],(char*)clave);
     if(resultado == ERROR)
         return ERROR;
     if(hash->destructor)
@@ -203,7 +207,7 @@ void* hash_obtener(hash_t* hash, const char* clave){
     if(!hash->tabla[valor_hash])
         return NULL;//no hay arbol en esa posicion 
 
-    return abb_buscar(hash->tabla[valor_hash],(char*)clave);
+    return lista_elemento_por_clave(hash->tabla[valor_hash],(char*)clave);
 }
 
 
@@ -217,7 +221,7 @@ bool hash_contiene(hash_t* hash, const char* clave){
     if(!hash->tabla[valor_hash])
         return false;//no hay arbol en esa posicion 
 
-    return abb_contiene(hash->tabla[valor_hash],(char*)clave);
+    return lista_contiene_clave(hash->tabla[valor_hash],(char*)clave);
     
     //devolvera true si existe el elemento buscado
 }
@@ -231,7 +235,7 @@ size_t hash_cantidad(hash_t* hash){
     size_t cantidad = 0;
 
     for(int i = 0; i < hash->tamanio_tabla; i++)
-        cantidad += abb_tamanio(hash->tabla[i]);
+        cantidad += lista_tamanio(hash->tabla[i]);
 
     return cantidad;
 }
@@ -240,16 +244,23 @@ size_t hash_cantidad(hash_t* hash){
 void hash_destruir(hash_t* hash){
     if(hash){
         for(int i = 0; i < hash->tamanio_tabla; i++)
-            abb_destruir_todo(hash->tabla[i], hash->destructor);
+            lista_destruir_todo(hash->tabla[i], hash->destructor);
 
         free(hash->tabla);
         free(hash);
     }
 }
 
-
 size_t hash_con_cada_clave(hash_t* hash, bool (*funcion)(hash_t* hash, const char* clave, void* aux), void* aux){
     
+    if(!hash || !funcion)
+        return 0;
 
-    return 0;
+    size_t contador = 0;
+    bool seguir = false;
+
+    for(int i = 0; i < hash->tamanio_tabla && !seguir; i++)
+        contador += lista_con_cada_elemento_h(hash, hash->tabla[i], funcion, aux, &seguir);
+
+    return contador;
 }
