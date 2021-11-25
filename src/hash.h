@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-
 /*
  * Destructor de los datos almacenados en el hash.  Cada vez que un
  * elemento abandone el hash, debe invocarse al destructor pasandole
