@@ -1,12 +1,13 @@
 #include "hash.h"
 #include "abb.h"
 #include <string.h>
+#include <stdio.h>
 
 #define EXITO 0
 #define ERROR -1
 #define CAPACIDAD_MINIMA 3
 #define CAPACIDAD_MAXIMA_PORCENTUAL 75
-#define PROMEDIO_ELEMENTOS 3
+#define PROMEDIO_ELEMENTOS 1
 #define MULTIPLICADOR_REHASH 2
 
 //funcion de hash
@@ -93,6 +94,8 @@ int guardar_elementos_en_listas(hash_t* hash, void** array, char** claves, size_
 
     if(elementos_guardados != tamanio){
         free(array);
+        for(int i = 0; i < elementos_guardados; i++)
+            free(claves[i]);
         free(claves);
         return ERROR;
     }
@@ -140,6 +143,8 @@ int rehashear(hash_t* hash){
         resultado = hash_insertar(hash, claves[i], array[i]);
 
     free(array);
+    for(int i = 0; i < tamanio; i++)
+        free(claves[i]);
     free(claves);
 
     return resultado;
@@ -179,7 +184,7 @@ int hash_quitar(hash_t* hash, const char* clave){
 
     if(!hash || !clave || !hash_contiene(hash, clave))
         return ERROR;
-
+    
     void* elemento = hash_obtener(hash, clave);
 
     size_t valor_hash = hash->hash(hash, clave);
@@ -187,8 +192,10 @@ int hash_quitar(hash_t* hash, const char* clave){
     int resultado = abb_quitar(hash->tabla[valor_hash],(char*)clave);
     if(resultado == ERROR)
         return ERROR;
+
     if(hash->destructor)
         hash->destructor(elemento);
+        
 
     return EXITO;
 }
@@ -246,7 +253,6 @@ void hash_destruir(hash_t* hash){
         free(hash);
     }
 }
-
 
 size_t hash_con_cada_clave(hash_t* hash, bool (*funcion)(hash_t* hash, const char* clave, void* aux), void* aux){
     

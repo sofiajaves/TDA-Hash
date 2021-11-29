@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 
 #define EXITO 0
@@ -46,7 +47,12 @@ nodo_abb_t* nodo_crear(void* elemento, char* clave){
   if(!nodo_nuevo)
     return NULL;
 
-  nodo_nuevo->clave = clave;
+  char* clave_nueva = malloc((strlen(clave)+1)*sizeof(char));
+  if(!clave_nueva){
+    free(nodo_nuevo);
+    return NULL;
+  }
+  nodo_nuevo->clave = strcpy(clave_nueva,clave);
   nodo_nuevo->elemento = elemento;
   return nodo_nuevo;
 }
@@ -68,6 +74,7 @@ nodo_abb_t* nodo_insertar(nodo_abb_t* nodo, void* elemento, char* clave, abb_com
 
   if(comparacion == 0){
     nodo->elemento = elemento;
+    //printf("Se actualizo la clave\n");
     *resultado = EXITO;
   }
 
@@ -129,6 +136,7 @@ nodo_abb_t* eliminar_nodo(nodo_abb_t* nodo, abb_comparador comparador){
   } else 
     nodo_predecesor = nodo->derecha;
   
+  free(nodo->clave);
   free(nodo);
   return nodo_predecesor;
 }
@@ -236,7 +244,9 @@ void nodo_destruir(nodo_abb_t* nodo, void (*destructor)(void*)){
 
     if(destructor)
       destructor(nodo->elemento);
+    
 
+    free(nodo->clave);
     free(nodo);
   }
 }
@@ -369,12 +379,15 @@ size_t abb_con_cada_elemento_h(hash_t* hash, abb_t* arbol, bool (*funcion)(hash_
  */
 bool guardar_elementos(void* elemento, char* clave, void* lista_auxiliar){
   lista_t* lista = (lista_t*)lista_auxiliar;
-
+  //printf("%s\n", clave);
   lista->array[lista->posicion] = elemento;
-  lista->claves[lista->posicion] = clave;
+  char* clave_nueva = malloc((strlen(clave)+1)*sizeof(char));
+  if(!clave_nueva)
+    return false;
+  lista->claves[lista->posicion] = strcpy(clave_nueva,clave);
 
   lista->posicion++;
-  return (lista->posicion < lista->tamanio);
+  return true;
 }
 
 size_t abb_recorrer(abb_t* arbol, abb_recorrido recorrido, void** array, char** claves, size_t posicion_inicial, size_t tamanio_array){
