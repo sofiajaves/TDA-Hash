@@ -14,6 +14,8 @@ typedef enum {INORDEN, PREORDEN, POSTORDEN} abb_recorrido;
  */
 typedef int (*abb_comparador)(void*, void*);
 
+typedef void (*abb_destructor)(void*);
+
 typedef struct nodo_abb {
   void* elemento;
   char* clave;
@@ -24,6 +26,7 @@ typedef struct nodo_abb {
 typedef struct abb{
   nodo_abb_t* nodo_raiz;
   abb_comparador comparador;
+  abb_destructor destructor;
   size_t tamanio;
 } abb_t;
 
@@ -32,7 +35,7 @@ typedef struct abb{
  *
  * Devuelve un puntero al arbol creado o NULL en caso de error.
  */
-abb_t* abb_crear();
+abb_t* abb_crear(abb_destructor destructor);
 
 /**
  * Inserta un elemento en el arbol.
@@ -121,6 +124,6 @@ void abb_destruir(abb_t* arbol);
  * Adicionalmente invoca el destructor en cada uno de los elementos almacenados
  * en el arbol (si la funcion destructor no es NULL).
  */
-void abb_destruir_todo(abb_t* arbol, void (*destructor)(void*));
+void abb_destruir_todo(abb_t* arbol);
 
 #endif /* __ABB__H__ */

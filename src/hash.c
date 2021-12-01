@@ -65,7 +65,7 @@ hash_t* hash_crear(hash_destruir_dato_t destruir_elemento, size_t capacidad_inic
 abb_t* arbol_en_tabla(hash_t* hash, size_t posicion){
 
     if(!hash->tabla[posicion])
-        hash->tabla[posicion] = abb_crear();
+        hash->tabla[posicion] = abb_crear(hash->destructor);
 
     return hash->tabla[posicion];
 }
@@ -247,7 +247,7 @@ size_t hash_cantidad(hash_t* hash){
 void hash_destruir(hash_t* hash){
     if(hash){
         for(int i = 0; i < hash->tamanio_tabla; i++)
-            abb_destruir_todo(hash->tabla[i], hash->destructor);
+            abb_destruir_todo(hash->tabla[i]);
 
         free(hash->tabla);
         free(hash);

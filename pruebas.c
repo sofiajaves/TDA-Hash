@@ -359,10 +359,10 @@ void dadaUnaTablaDeHash_Y_UnDestructor_SeInvocaLaCantidadDeVecesNecesariasActual
 
     hash_destruir(hash);
 
-    pa2m_afirmar(elemento == 0, "Se destruyo el primer elemento correctamente");
-    pa2m_afirmar(elemento1 == 1, "Se destruyo el segundo elemento correctamente");
-    pa2m_afirmar(elemento2 == 1, "Se destruyo el tercer elemento correctamente");
-    pa2m_afirmar(elemento3 == 0, "Se destruyo el cuarto elemento correctamente");
+    pa2m_afirmar(elemento == 1, "Se destruyo el primer elemento correctamente");
+    pa2m_afirmar(elemento1 == 2, "Se destruyo el segundo elemento correctamente");
+    pa2m_afirmar(elemento2 == 2, "Se destruyo el tercer elemento correctamente");
+    pa2m_afirmar(elemento3 == 1, "Se destruyo el cuarto elemento correctamente");
 }
 
 int main(){

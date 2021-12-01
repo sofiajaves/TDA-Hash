@@ -27,13 +27,14 @@ int comparador_claves(void* elemento1, void* elemento2){
   return(strcmp(clave1,clave2));
 }
 
-abb_t* abb_crear(){
+abb_t* abb_crear(abb_destructor destructor){
     
   abb_t* abb = calloc(1,sizeof(abb_t));
   if(!abb)
     return NULL;
 
   abb->comparador = comparador_claves;
+  abb->destructor = destructor;
   return abb;
 }
 
@@ -61,7 +62,7 @@ nodo_abb_t* nodo_crear(void* elemento, char* clave){
  * Pre: Recibira una referencia a un nodo, un elemento, el comparador y un puntero a un resultado
  * Post: Insertara el nodo en el arbol. Si el nodo no pudiera ser insertado se cambiara el resultado a ERROR
  */
-nodo_abb_t* nodo_insertar(nodo_abb_t* nodo, void* elemento, char* clave, abb_comparador comparador, int* resultado){
+nodo_abb_t* nodo_insertar(nodo_abb_t* nodo, void* elemento, char* clave, abb_comparador comparador, abb_destructor destructor, int* resultado){
 
   if(!nodo){
     nodo_abb_t* nodo_nuevo = nodo_crear(elemento, clave);
@@ -73,16 +74,17 @@ nodo_abb_t* nodo_insertar(nodo_abb_t* nodo, void* elemento, char* clave, abb_com
   int comparacion = comparador(clave,nodo->clave);
 
   if(comparacion == 0){
+    if(destructor)
+      destructor(nodo->elemento);
     nodo->elemento = elemento;
-    //printf("Se actualizo la clave\n");
     *resultado = EXITO;
   }
 
   else if(comparacion < 0)
-    nodo->izquierda = nodo_insertar(nodo->izquierda, elemento, clave, comparador, resultado);
+    nodo->izquierda = nodo_insertar(nodo->izquierda, elemento, clave, comparador, destructor, resultado);
 
   else
-    nodo->derecha = nodo_insertar(nodo->derecha, elemento, clave, comparador, resultado);
+    nodo->derecha = nodo_insertar(nodo->derecha, elemento, clave, comparador, destructor, resultado);
 
   return nodo;
 }
@@ -96,7 +98,7 @@ abb_t* abb_insertar(abb_t* arbol, void* elemento, char* clave){
 
   bool tiene_clave = abb_buscar(arbol, clave);
 
-  arbol->nodo_raiz = nodo_insertar(arbol->nodo_raiz, elemento, clave, arbol->comparador, &resultado);
+  arbol->nodo_raiz = nodo_insertar(arbol->nodo_raiz, elemento, clave, arbol->comparador, arbol->destructor, &resultado);
 
   if(!tiene_clave)
     arbol->tamanio++;
@@ -252,13 +254,16 @@ void nodo_destruir(nodo_abb_t* nodo, void (*destructor)(void*)){
 }
 
 void abb_destruir(abb_t *arbol){
-  abb_destruir_todo(arbol, NULL);
+    if(arbol){
+    nodo_destruir(arbol->nodo_raiz, NULL);
+    free(arbol);
+  }
 }
 
-void abb_destruir_todo(abb_t *arbol, void (*destructor)(void *)){
+void abb_destruir_todo(abb_t *arbol){
 
   if(arbol){
-    nodo_destruir(arbol->nodo_raiz, destructor);
+    nodo_destruir(arbol->nodo_raiz, arbol->destructor);
     free(arbol);
   }
 }
